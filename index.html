@@ -12,9 +12,6 @@
     <!-- Import libraries. -->
     <script language="JavaScript" type="text/javascript" src="libs/d3.min.js"></script>
 
-    <!-- Load papa parse for csvs -->
-    <!-- <script src="libs/papaparse.min.js"></script> -->
-
     <!-- Load d3-cloud -->
     <script src="libs/d3.layout.cloud.js"></script>
 
@@ -25,19 +22,16 @@
     <link rel="stylesheet" href="style/styles.css" />
   </head>
 
-  <body onload="init()">
+  <body onload="init()" style="background-color:#A69BBD">
     <div class="row">
       
       <div class="column left" style="width: 25%; align-items: center;">
         <div id="titleLogo">
-          <img src="img/Logo.png" style="height:100px;">
+          <img src="img/Logostroked.png" style="height:100px;">
         </div>
       </div>
 
       <div class="column right" style="width: 75%">
-        <!--<div id="allseasonsbutton" style="width: 100%; float:right">
-          <button id="allseasons" onclick="dataChange('all')" style="border-radius: 50%; padding: 10px; margin: 10px;">Select All</button>
-        </div> -->
         <div id="seasonbuttons" style="margin-top:30px;">
           <button id="season1" onclick="dataChange('season1')" style="border-radius: 50%; padding: 10px;">Season 1</button>
           <button id="season2" onclick="dataChange('season2')" style="border-radius: 50%; padding: 10px;">Season 2</button>
@@ -59,11 +53,11 @@
       
       <div class="left2" style="width: 49.5%; align-items: center;">
         
-        <div id="barChart" style="position:relative; height: 300px; font-family: 'calibri'; border:2px solid black">
+        <div class="idioms" id="barChart" style="position:relative; height: 300px; font-family: 'calibri'; overflow-x: scroll; border:2px; border-radius: 25px; background-color:#FFFFFF">
           <h3>Who is the most active character of the show?</h3>
         </div>
 
-        <div id="networkGraph" style="font-family: 'calibri'; margin-top: 10px; border:2px solid black">
+        <div class="idioms" id="networkGraph" style="font-family: 'calibri'; overflow-x: scroll; margin-top: 10px; margin-bottom: 10px; border:2px; border-radius: 25px; background-color:#FFFFFF">
           <h3>How do characters interact with each other?</h3>
         </div>
 
@@ -71,18 +65,24 @@
       
       <div class="right2" style="width: 49.5%; float: right">
 
-        <div id="wordCloud" style="height:300px; font-family: 'calibri'; float: right; border:2px solid black">
+        <div class="idioms" id="wordCloud" style="height:300px; font-family: 'calibri'; overflow-x: scroll; float: right; border:2px; border-radius: 25px; background-color:#FFFFFF">
           <h3 style="margin-bottom:0;">How are emotions felt during the show?</h3>
           <h3 style="margin-top:0;">Which character feels each emotion the strongest?</h3>
         </div>
 
-        <div id="boxPlot" style="height: 500px;font-family: 'calibri'; float: right; margin-top: 10px; border:2px solid black; overflow-x: scroll;">
-          <h3>How do viewers rate episodes, sorted by directors?</h3>
-        </div>
+        <div class="box" style="height: 590px;font-family: 'calibri'; float: right; margin-top: 10px; border:2px ; border-radius: 25px; background-color:#FFFFFF; margin-bottom: 10px">
+          <div>
+            <h3 style="margin-bottom: 40px; font-family: 'calibri'">How do viewers rate episodes, sorted by directors?</h3>
+            <button id="favEpisode" onclick="favoriteEpisode(false)" style="border-radius: 50%; padding: 10px; border:0px solid black; vertical-align: top; margin:0 auto; display:block;">Favorite Episodes</button>
+          </div>
 
-        <div id="preferred" style="font-family: 'calibri'; float: right; margin-top: 10px; border:2px solid black; overflow-x: scroll">
-          <h3>Which episode is a fans' favorite?</h3>
-          <img src="img/preferred.png" height="130">
+          <div class="example" id="boxPlot" style="font-family: 'calibri'; overflow-x: scroll; background-color:#FFFFFF; margin-left:20px; width: 90%;">
+          </div>
+
+          <div>
+            <p style="font-family:'calibri';">Directors</p>
+          </div>
+
         </div>
 
       </div>

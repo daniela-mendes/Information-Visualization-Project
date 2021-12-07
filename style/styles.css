@@ -5,3 +5,20 @@ div {
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
+.idioms::-webkit-scrollbar {
+    display: none;
+}
+
+.example::-webkit-scrollbar {
+  height: 10px;
+}
+
+.example::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px grey; 
+  border-radius: 10px;
+}
+
+.example::-webkit-scrollbar-thumb {
+  background: #A69BBD; 
+  border-radius: 10px;
+}

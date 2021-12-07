@@ -14,13 +14,13 @@ var happiness = "/data/happy_emotion.csv";
 var sadness = "/data/sad_emotion.csv";
 var surprise = "/data/surprise_emotion.csv";
 var charSelected = '';
+var favEp = false;
 
 function init() {
-    Promise.all([d3.csv(presence), d3.csv(characters), d3.csv(technical), d3.csv(rachel), d3.csv(ross), d3.csv(chandler), d3.csv(phoebe), d3.csv(monica), d3.csv(joey), d3.csv(anger), d3.csv(fear), d3.csv(happiness), d3.csv(sadness), d3.csv(surprise)]).then(function ([presence, /*emotions,*/ characters, technical, rachel, ross, chandler, phoebe, monica, joey, anger, fear, happiness, sadness, surprise]) {
-            createBarChart(presence, characters, false); // false is an update variable (its false because we want to create an idiom from scratch)
+    Promise.all([d3.csv(presence), d3.csv(characters), d3.csv(technical), d3.csv(rachel), d3.csv(ross), d3.csv(chandler), d3.csv(phoebe), d3.csv(monica), d3.csv(joey), d3.csv(anger), d3.csv(fear), d3.csv(happiness), d3.csv(sadness), d3.csv(surprise)]).then(function ([presence, characters, technical, rachel, ross, chandler, phoebe, monica, joey, anger, fear, happiness, sadness, surprise]) {
+            createBarChart(presence, characters, false);
             createNetworkGraph(characters, rachel, ross, chandler, phoebe, monica, joey, false);
             createBoxPlot(technical, false);
-            createFavoriteEpisode(technical, false);
             createWordCloud(anger, fear, happiness, sadness, surprise, characters, false);
         })
         .catch((error) => {
@@ -33,7 +33,7 @@ function init() {
 function createBarChart(data, dataChars, update) {
     width = 500;
 
-    height = 200;
+    height = 190;
 
     margin = { top: 20, right: 20, bottom: 20, left: 40 };
 
@@ -117,17 +117,16 @@ function createBarChart(data, dataChars, update) {
         .select("body")
         .append("div")
         .style("opacity", 0)
-        .style("position", "absolute")
-        //.style("text-align","left");
+        .style("position", "absolute");
 
     svg
-        .select("g.bars") //selects the bars of bar chart
-        .selectAll("rect") //at first there are none but after updating, there will be more
-        .data(dataChars, function (d) { //bind the data
+        .select("g.bars") 
+        .selectAll("rect")
+        .data(dataChars, function (d) {
             return d.character;
         })
         .join(
-            (enter) => { //creates a new rectangule for every new data item that is not yet represented 
+            (enter) => {
                 return enter
                     .append("rect")
                     .attr("x", (d, i) => x(d.character)) // bars all next to eachother
@@ -138,23 +137,22 @@ function createBarChart(data, dataChars, update) {
                     .style("fill", function (d) {
                         return d.colour;
                     })
-                    //.on("mouseover", handleMouseOver) //on event bounds it together 
-                    //.on("mouseleave", handleMouseLeave)
                     .on("click", handleClick)
                     .on("mouseover", function (d) { Tooltip.style("opacity", 1) })
                     .on("mousemove", function (d, i) {
                             Tooltip.html("" + i.presence + " words");
                             Tooltip.style("left", d.x + 10 + "px");
-                            Tooltip.style("top", d.y + "px");
+                            Tooltip.style("top", d.pageY + "px");
                             Tooltip.style("width",'100px');
                             Tooltip.style("background",'#EFEFEF');
+                            Tooltip.style("font-family", "calibri");
                         })
                     .on("mouseleave", function (d) { Tooltip.style("opacity", 0) })
                     .transition()
                     .duration(2000)
                     .style("opacity", "100%");
             },
-            (update) => { //represents the set of rectangules that already exists 
+            (update) => {
                 update
                     .transition()
                     .duration(1000)
@@ -172,7 +170,7 @@ function createBarChart(data, dataChars, update) {
             }
         );
 
-    if (!update) { //if we do not have an update
+    if (!update) {
         svg.append("g").attr("class", "xAxis");
         svg.append("text")
             .attr("class", "xAxis")
@@ -181,7 +179,6 @@ function createBarChart(data, dataChars, update) {
             .text("Characters");
         
         svg.append("g").attr("class", "yAxis");
-        
         svg.append("text")
             .attr("class", "yAxis")
             .attr("transform", "rotate(-90)")
@@ -392,13 +389,11 @@ function createNetworkGraph(dataChars, dataRa, dataRo, dataC, dataP, dataM, data
     const svg = d3
         .select("div#networkGraph")
         .select("svg")
-        .attr("width", width/* + margin.left + margin.right*/)
-        .attr("height", height+26/* + margin.top + margin.bottom*/);
-        //.append("g")
-        //.attr("transform",`translate(${margin.left}, ${margin.top})`);
+        .attr("width", width)
+        .attr("height", height+26);
 
     var force = 
-        d3.forceSimulation(data.nodes); // Force algorithm is applied to data.nodes
+        d3.forceSimulation(data.nodes);
 
     
     x_nodes = [0.33*width, 0.67*width, 0.83*width, 0.67*width, 0.33*width, 0.17*width];
@@ -408,17 +403,16 @@ function createNetworkGraph(dataChars, dataRa, dataRo, dataC, dataP, dataM, data
         data.nodes[index].y = y_nodes[index];
     }
 
-    force.force("link", d3.forceLink() // This force provides links between nodes
-        .id(function(d) { return d.id; }) // This provide  the id of a node
-        .links(data.links) // and this the list of links
+    force.force("link", d3.forceLink() 
+        .id(function(d) { return d.id; })
+        .links(data.links)
     )
 
     var Tooltip = d3
         .select("body")
         .append("div")
         .style("opacity", 0)
-        .style("position", "absolute")
-        //.style("text-align","left");
+        .style("position", "absolute");
 
 
     // Initialize the nodes
@@ -494,15 +488,13 @@ function createNetworkGraph(dataChars, dataRa, dataRo, dataC, dataP, dataM, data
                         else if (i.source.name == 'Joey') { Tooltip.html(i.source.name + "-" + i.target.name + ": <br>" + dataJ[i.target.name] + " interactions")}
                         else if (i.source.name == 'Phoebe') { Tooltip.html(i.source.name + "-" + i.target.name + ": <br>" + dataP[i.target.name] + " interactions"); }
                         Tooltip.style("left", d.x + 20 + "px");
-                        Tooltip.style("top", d.y + "px");
+                        Tooltip.style("top", d.pageY + "px");
                         Tooltip.style("width",'150px');
                         Tooltip.style("background",'#EFEFEF')
                         Tooltip.style("font-family", "calibri");
 
                     })
                     .on("mouseleave", function (d) { Tooltip.style("opacity", 0) })
-                    //.transition()
-                    //.duration(2000)
                     .style("opacity", "100%");
             },
             (update) => {
@@ -529,15 +521,13 @@ function createNetworkGraph(dataChars, dataRa, dataRo, dataC, dataP, dataM, data
                         else if (i.source.name == 'Joey') { Tooltip.html(i.source.name + "-" + i.target.name + ": <br>" + dataJ[i.target.name] + " interactions")}
                         else if (i.source.name == 'Phoebe') { Tooltip.html(i.source.name + "-" + i.target.name + ": <br>" + dataP[i.target.name] + " interactions"); }
                         Tooltip.style("left", d.x + 20 + "px");
-                        Tooltip.style("top", d.y + "px");
+                        Tooltip.style("top", d.pageY + "px");
                         Tooltip.style("width",'150px');
                         Tooltip.style("background",'#EFEFEF')
                         Tooltip.style("font-family", "calibri");
 
                     })
                     .on("mouseleave", function (d) { Tooltip.style("opacity", 0) })
-                    //.transition()
-                    //.duration(2000)
                     .style("opacity", "100%");
             },
             (exit) => {
@@ -565,7 +555,6 @@ function createNetworkGraph(dataChars, dataRa, dataRo, dataC, dataP, dataM, data
                         else if (d.name == 'Joey') { return "/img/joey.png"; }
                         else if (d.name == 'Phoebe') { return "/img/phoebe.png"; }
                     })
-                    //.style("filter", grayscale(100%))
                     .attr("width", 2*radius)
                     .attr("height", 2*radius)
                     .attr("x", function(d) { return (d.x - radius); })
@@ -582,7 +571,6 @@ function createNetworkGraph(dataChars, dataRa, dataRo, dataC, dataP, dataM, data
                         else if (d.name == 'Joey') { return "/img/joey.png"; }
                         else if (d.name == 'Phoebe') { return "/img/phoebe.png"; }
                     })
-                    //.style("filter", grayscale(100%))
                     .attr("width", 2*radius)
                     .attr("height", 2*radius)
                     .attr("x", function(d) { return (d.x - radius); })
@@ -603,7 +591,7 @@ function createBoxPlot(data, update) {
     
     margin = { top: 20, right: 20, bottom: 20, left: 40 };
     
-    boxwidth = 15;
+    boxwidth = 30;
 
     var directors = d3.groups(data, d => d.Director);
     var stats = [];
@@ -628,15 +616,23 @@ function createBoxPlot(data, update) {
         stats.push(info);
     }
 
+    x_range = 0;
+    if ((directors.length*(boxwidth+10) - margin.right) < (width - margin.right)) { 
+        x_range = width - margin.right; 
+    }
+    else { 
+        x_range = (directors.length*(boxwidth+10) - margin.right); 
+    }
+
     x = d3
         .scaleBand()
         .domain(data.map(d => d.Director))
-        .range([margin.left, width /*+ 100*/ - margin.right])
+        .range([margin.left, x_range])
         .padding(0.9);
     
     y = d3
         .scaleLinear()
-        .domain([10, 7])
+        .domain([10, 6.8])
         .range([margin.top, height - margin.bottom]);
 
     function xAxis(g) {
@@ -644,7 +640,7 @@ function createBoxPlot(data, update) {
             d3
             .axisBottom(x))
             .selectAll("text")
-            .attr("transform", `translate(${-boxwidth},10)rotate(-90)`)
+            .attr("transform", `translate(${-boxwidth/2},10)rotate(-90)`)
             .style("text-anchor", "end");
     }
 
@@ -661,14 +657,20 @@ function createBoxPlot(data, update) {
         .select("body")
         .append("div")
         .style("opacity", 0)
-        .style("position", "absolute")
-        //.style("text-align","left");
+        .style("position", "absolute");
 
     const svg = d3
         .select("div#boxPlot")
         .select("svg")
-        .attr("width", width +10)
-        .attr("height", height+100);
+        .attr("width", function (d) {
+            if ((directors.length*(boxwidth+10) + 10) < (width + 10)) { 
+                return width + 10;
+            }
+            else { 
+                return (directors.length*(boxwidth+10) + 10); 
+            }
+        })
+        .attr("height", height+90);
     
     svg
         .select("g.vertLines")
@@ -866,18 +868,19 @@ function createBoxPlot(data, update) {
                 return enter
                     .append("circle")
                     .attr("cx", function (d) {
-                        return (x(d.Director)); // '- 25 + Math.random()*50' is jitter so that the circles dont overlap
+                        return (x(d.Director) - 12.5 + Math.random()*25);
                     })
                     .attr("cy", function (d) { return y(d.Rating); })
                     .attr("r", 4)
                     .attr("transform", `translate(${margin.left/2},0)`)
                     .style("fill", function (d) { return d.Colour; })
+                    .style("stroke", "#000000")
                     .on("click", handleClick)
                     .on("mouseover", function (d) { Tooltip.style("opacity", 1) })
                     .on("mousemove", function (d, i) {
                             Tooltip.html("S" + i.Season + "E" + i.Episode + ": <br>" + i.Title + " (" + i.Rating + ")");
                             Tooltip.style("left", d.x + 10 + "px");
-                            Tooltip.style("top", d.y + "px");
+                            Tooltip.style("top", d.pageY + "px");
                             Tooltip.style("width",'300px');
                             Tooltip.style("background",'#EFEFEF')
                             Tooltip.style("font-family", "calibri");
@@ -892,12 +895,13 @@ function createBoxPlot(data, update) {
                     .transition()
                     .duration(2000)
                     .attr("cx", function (d) {
-                        return (x(d.Director)); // '- 25 + Math.random()*50' is jitter so that the circles dont overlap
+                        return (x(d.Director) - 12.5 + Math.random()*25);
                     })
                     .attr("cy", function (d) { return y(d.Rating); })
                     .attr("r", 4)
                     .attr("transform", `translate(${margin.left/2},0)`)
-                    .style("fill", function (d) { return d.Colour; });
+                    .style("fill", function (d) { return d.Colour; })
+                    .style("stroke", "#000000");
             },
             (exit) => {
                 return exit.remove();
@@ -906,11 +910,6 @@ function createBoxPlot(data, update) {
         
     if (!update) {
         svg.append("g").attr("class", "xAxis");
-        svg.append("text")
-            .attr("class", "xAxis")
-            .attr("transform", "translate(" + (width/2) + " ," + (height + 100) + ")")
-            .style("text-anchor", "center")
-            .text("Directors");
 
         svg.append("g").attr("class", "yAxis");
         svg.append("text")
@@ -929,149 +928,6 @@ function createBoxPlot(data, update) {
 }
 
 
-function createFavoriteEpisode(data, update) {
-    width = 600;
-    
-    height = 300;
-    
-    margin = { top: 20, right: 20, bottom: 20, left: 40 };
-
-    boxwidth = 250;
-
-    maxRating = d3.max(data, (d) => d.Rating);
-
-    var ratings = d3.groups(data, d => d.Rating);
-
-    ratings = ratings.filter(function (d, i) {
-        if (d[0] == maxRating) { return d[1]; }
-    });
-
-    ratings = ratings[0][1];
-    console.log(ratings.length + " episodes with max rating");
-    
-    x = d3
-        .scaleBand()
-        .domain(data.map(d => d.Title))
-        .rangeRound([margin.left, width - margin.right])
-        .padding(1);
-
-    y = d3
-        .scaleLinear()
-        .domain(1)
-        .range([margin.top, height - margin.bottom]);
-
-    function xAxis(g) {
-        g.attr("transform", `translate(0,${height-margin.bottom})`).call(d3.axisBottom(x));
-    }
-
-    function yAxis(g) {
-        g.attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y));
-    }
-
-    /*if (!update) {
-        d3.select("div#preferred").append("svg").append("g").attr("class", "boxes");
-    }
-
-    const svg = d3
-        .select("div#preferred")
-        .select("svg")
-        .attr("width", ratings.length*(boxwidth+10))
-        .attr("height", height);*/
-
-    /*var Tooltip = d3
-        .select("body")
-        .append("div")
-        .style("opacity", 0)
-        .style("position", "absolute")
-        //.style("text-align","left");*/
-
-    /*var bar = svg
-        .select("g.boxes")
-        .selectAll("rect")
-        .data(ratings)
-        .join(
-            (enter) => {
-                return enter
-                    .append("rect")
-                    .attr("x", function (d, i) { return i*(boxwidth+10); })
-                    .attr("y", 1)
-                    .attr("height", 100)
-                    .attr("width", boxwidth)
-                    .attr("stroke", "black")
-                    .style("fill", "#FFFFFF")
-                    .transition()
-                    .duration(2000);
-            },
-            (update) => {
-                update
-                    .transition()
-                    .duration(2000)
-                    .attr("x", function (d, i) { return i*(boxwidth+10); })
-                    .attr("y", 1)
-                    .attr("height", 100)
-                    .attr("width", boxwidth)
-                    .attr("stroke", "black")
-                    .style("fill", "#FFFFFF");
-            },
-            (exit) => {
-                return exit.remove();
-            }
-        );
-
-
-    svg
-        .select("g.boxes")
-        .selectAll("text")
-        .data(ratings)
-        .join(
-            (enter) => {
-                return enter
-                    .append("text")
-                    .attr("x", function (d, i) { return i*(boxwidth+10); })
-                    .attr("y", 10)
-                    .attr("dx", ".35em")
-                    .attr("dy", ".35em")
-                    .attr("width", boxwidth)
-                    .text(function (d) {
-                        str = "Fan Favorite (" + d.Rating + ") \\n";
-                        title = d.Title;
-                        var i;
-                        for (i = 0; (i+35) < title.length; i+36) {
-                            str = str + title.substr(i,36) + "\\n";
-                        }
-                        str = str + title.substr(i, ) + "\nS" + d.Season + " E" + d.Episode;
-
-                    return str;
-                    })
-                    .transition()
-                    .duration(2000);
-            },
-            (update) => {
-                update
-                    .transition()
-                    .duration(2000)
-                    .attr("x", function (d, i) { return i*(boxwidth+10); })
-                    .attr("y", 1)
-                    .attr("height", 100)
-                    .attr("width", boxwidth)
-                    .attr("stroke", "black")
-                    .style("fill", "#FFFFFF");
-            },
-            (exit) => {
-                return exit.remove();
-            }
-        );
-
-    if (!update) { //if we do not have an update
-        svg.append("g").attr("class", "xAxis");
-        svg.append("g").attr("class", "yAxis");
-    }
-
-    d3.select("g.xAxis").call(xAxis);
-    d3.select("g.yAxis").call(yAxis);*/
-}
-
-
 function createWordCloud(angerData, fearData, happinessData, sadnessData, surpriseData, dataChars, update) {
     // set the dimensions and margins of the graph
     var margin = {top: 10, right: 10, bottom: 10, left: 10};
@@ -1086,12 +942,16 @@ function createWordCloud(angerData, fearData, happinessData, sadnessData, surpri
     sadnessData = countEmotion(sadnessData, dataChars);
     surpriseData = countEmotion(surpriseData, dataChars);
 
-    var data = [{"text":"anger", "size":angerData.totalCount, "char":angerData.char, "color":angerData.colour}, {"text":"fear", "size":fearData.totalCount, "char":fearData.char, "color":fearData.colour}, {"text":"happiness", "size":happinessData.totalCount, "char":happinessData.char, "color":happinessData.colour}, {"text":"sadness", "size":sadnessData.totalCount, "char":sadnessData.char, "color":sadnessData.colour}, {"text":"surprise", "size":surpriseData.totalCount, "char":surpriseData.char, "color":surpriseData.colour}];
+    var data = [{"text":"ANGER", "size":angerData.totalCount, "char":angerData.char, "color":angerData.colour, "percent":angerData.percentages}, 
+                {"text":"FEAR", "size":fearData.totalCount, "char":fearData.char, "color":fearData.colour, "percent":fearData.percentages}, 
+                {"text":"HAPPINESS", "size":happinessData.totalCount, "char":happinessData.char, "color":happinessData.colour, "percent":happinessData.percentages}, 
+                {"text":"SADNESS", "size":sadnessData.totalCount, "char":sadnessData.char, "color":sadnessData.colour, "percent":sadnessData.percentages}, 
+                {"text":"SURPRISE", "size":surpriseData.totalCount, "char":surpriseData.char, "color":surpriseData.colour, "percent":surpriseData.percentages}];
 
     maxEm = d3.max(data, (d) => d.size);
 
     if (!update) {
-        d3.select("div#wordCloud").append("svg")/*.append("g").attr("class", "words")*/;
+        d3.select("div#wordCloud").append("svg");
     }
 
     // append the svg object to the body of the page
@@ -1100,50 +960,63 @@ function createWordCloud(angerData, fearData, happinessData, sadnessData, surpri
         .select("svg")
         .attr("width", width)
         .attr("height", height)
-        /*.append("g")
-        .attr("transform","translate(" + margin.left + "," + margin.top + ")")*/;
+        .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+    var Tooltip = d3
+        .select("body")
+        .append("div")
+        .style("opacity", 0)
+        .style("position", "absolute");
 
     // Constructs a new cloud layout instance. It run an algorithm to find the position of words that suits your requirements
     const layout = d3.layout.cloud()
         .size([width, height])
-        .words(data/*myWords.map(function(d) { return {text: d}; })*/)
-        .padding(10)
+        .words(data)
         .rotate(0)
-        .fontSize(function (d) { return (d.size*60)/maxEm; })
+        .fontSize(function (d) { return (d.size*70)/maxEm; })
         .font("calibri")
         .on("end", draw);
     
     layout.start();
 
     // This function takes the output of 'layout' above and draw the words
-    // Better not to touch it. To change parameters, play with the 'layout' variable above
     function draw(words) {
         if (!update) {
             svg.append("g").attr("class", "words");
         }
 
         svg
-            //.append("g")
             .select("g.words")
             .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
             .selectAll("text")
             .data(words)
-            //.enter()
             .join(
                 (enter) => {
                     return enter
                         .append("text")
                         .style("font-size", function(d) { return d.size + "px"; })
                         .style("font-family", (d) => d.font)
-                        .style("fill", function (d) { return d.color; } /*(d, i) => fill(i)*/)
+                        .style("fill", function (d) { return d.color; })
                         .attr("text-anchor", "middle")
                         .attr("transform", function(d) {
                             return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
                         })
                         .text(function(d) { return d.text; })
                         .on("click", handleClick)
+                        .on("mouseover", function (d) { Tooltip.style("opacity", 1) })
+                        .on("mousemove", function (d, i) {
+                            Tooltip.html("Chandler: " + i.percent.Chandler + "% <br>Joey: " + i.percent.Joey + "% <br>Monica: " + i.percent.Monica + "% <br>Phoebe: " + i.percent.Phoebe + "% <br>Rachel: " + i.percent.Rachel + "% <br>Ross: " + i.percent.Ross + "%");
+                            Tooltip.style("left", d.x + 10 + "px");
+                            Tooltip.style("top", d.pageY + "px");
+                            Tooltip.style("width",'120px');
+                            Tooltip.style("background",'#EFEFEF');
+                            Tooltip.style("font-family", "calibri")
+                            Tooltip.style("text-align", "right");
+                        })
+                        .on("mouseleave", function (d) { Tooltip.style("opacity", 0) })
                         .transition()
-                        .duration(2000);
+                        .duration(2000)
+                        .style("opacity", "100%");
                 },
                 (update) => {
                     update
@@ -1151,7 +1024,7 @@ function createWordCloud(angerData, fearData, happinessData, sadnessData, surpri
                         .duration(2000)
                         .style("font-size", function(d) { return d.size + "px"; })
                         .style("font-family", (d) => d.font)
-                        .style("fill", function (d) { return d.color; } /*(d, i) => fill(i)*/)
+                        .style("fill", function (d) { return d.color; })
                         .attr("text-anchor", "middle")
                         .attr("transform", function(d) {
                             return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
@@ -1169,8 +1042,11 @@ function createWordCloud(angerData, fearData, happinessData, sadnessData, surpri
 
 // Update data
 
-function dataChange(value) { //this function is triggered when i press one of the buttons (reset, new, old)
+function dataChange(value) { //this function is triggered when i press one of the top buttons
     Promise.all([d3.csv(presence), d3.csv(characters), d3.csv(technical), d3.csv(rachel), d3.csv(ross), d3.csv(chandler), d3.csv(phoebe), d3.csv(monica), d3.csv(joey), d3.csv(anger), d3.csv(fear), d3.csv(happiness), d3.csv(sadness), d3.csv(surprise)]).then(function ([presence, /*emotions,*/ characters, technical, rachel, ross, chandler, phoebe, monica, joey, anger, fear, happiness, sadness, surprise]) {
+
+        favEp = false;
+        document.getElementById('favEpisode').style.borderWidth = "0px";
 
         if (value == 'all') {
             document.getElementById('allseasons').style.borderWidth = "2px";
@@ -1186,7 +1062,7 @@ function dataChange(value) { //this function is triggered when i press one of th
             if (season_list.includes(value) == false) {
         		season_list.push(value);
         	}
-        	else { //if season_list.includes(value) == true
+        	else {
         		if (season_list.length > 1) {
                     let index = season_list.indexOf(value);
             		season_list.splice(index, 1);
@@ -1264,7 +1140,6 @@ function dataChange(value) { //this function is triggered when i press one of th
         createBarChart(presenceTemp, characters, true);
         createNetworkGraph(characters, rachelTemp, rossTemp, chandlerTemp, phoebeTemp, monicaTemp, joeyTemp, true);
         createBoxPlot(boxTemp, true);
-        //createFavoriteEpisode(boxTemp, true);
         createWordCloud(angerTemp, fearTemp, happinessTemp, sadnessTemp, surpriseTemp, characters, true);
 
     })
@@ -1274,11 +1149,116 @@ function dataChange(value) { //this function is triggered when i press one of th
 }
 
 
-function handleClick(event, d) {
+function favoriteEpisode(handle) {
     barChart = d3.select("div#barChart").select("svg");
     networkGraph = d3.select("div#networkGraph").select("svg");
     boxPlot = d3.select("div#boxPlot").select("svg");
-    //favorite = d3.select("div#preferred").select("svg");
+    wordCloud = d3.select("div#wordCloud").select("svg");
+
+    if (handle == false) { charSelected = ''; }
+
+    if (favEp == true) {
+        document.getElementById('favEpisode').style.borderWidth = "0px";
+        favEp = false;
+        boxPlot
+            .selectAll("circle")
+            .style("fill", function (d) { return d.Colour; });
+
+        barChart
+            .selectAll("rect")
+            .style("fill", function (d) { return d.colour; });
+
+        wordCloud
+            .selectAll("text")
+            .style("fill", function (d) { return d.color; });
+
+        networkGraph
+            .selectAll("line")
+            .style("stroke", function (d) { return "#aaa"; });
+
+        networkGraph
+            .selectAll("image")
+            .attr("xlink:href", function (d) {
+                if (d.name == 'Rachel') { return '/img/rachel.png'; } 
+                else if (d.name == 'Ross') { return '/img/ross.png'; } 
+                else if (d.name == 'Monica') { return '/img/monica.png'; } 
+                else if (d.name == 'Chandler') { return '/img/chandler.png'; } 
+                else if (d.name == 'Joey') { return '/img/joey.png'; } 
+                else if (d.name == 'Phoebe') { return '/img/phoebe.png'; }
+            });
+
+
+    }
+    
+    else if (favEp == false) {
+        document.getElementById('favEpisode').style.borderWidth = "2px";
+        favEp = true;
+
+        maxRating = 0;
+
+        boxPlot
+            .selectAll("circle")
+            .filter(function (d) {
+                if (d.Rating > maxRating) { maxRating = d.Rating; }
+            });
+
+        char = [];
+
+        boxPlot
+            .selectAll("circle")
+            .style("fill", function (d) {
+                if (d.Rating == maxRating) { 
+                    if (char.includes(d.Character) == false) { char.push(d.Character); }
+                    return d.Colour; 
+                }
+                else { return "grey"; }
+            });
+
+        barChart
+            .selectAll("rect")
+            .style("fill", function (d) {
+                if (char.includes(d.character)) { return d.colour; }
+                else { return "grey"; }
+            });
+
+        wordCloud
+            .selectAll("text")
+            .style("fill", function (d) {
+                if (char.includes(d.char)) { return d.color; }
+                else { return "grey"; }
+            });
+
+        networkGraph
+            .selectAll("line")
+            .style("stroke", function (d) {
+                if (char.includes(d.source.name)) { 
+                    if (d.source.name == 'Rachel') { return '#eab913'; } 
+                    else if (d.source.name == 'Ross') { return '#85a2be'; } 
+                    else if (d.source.name == 'Monica') { return '#be0a09'; } 
+                    else if (d.source.name == 'Chandler') { return '#d8873a'; } 
+                    else if (d.source.name == 'Joey') { return '#76a47d'; } 
+                    else if (d.source.name == 'Phoebe') { return '#B88194'; }
+                }
+                else if ((char.includes(d.source.name) == false) && (char.includes(d.target.name) == false)) { return "#aaa"; } 
+            });
+
+        networkGraph
+            .selectAll("image")
+            .attr("xlink:href", function (d) {
+                if (char.includes(d.name)) { return ('/img/' + d.name + '.png'); }
+                else { return ('/img/' + d.name + ' bw.png'); }
+            });
+    }
+}
+
+
+function handleClick(event, d) {
+    favEp = true;
+    favoriteEpisode(true);
+
+    barChart = d3.select("div#barChart").select("svg");
+    networkGraph = d3.select("div#networkGraph").select("svg");
+    boxPlot = d3.select("div#boxPlot").select("svg");
     wordCloud = d3.select("div#wordCloud").select("svg");
 
     //if apenas para alterar a personagem selecionada
@@ -1498,6 +1478,7 @@ function filterData(data, list) {
     });
 }
 
+
 function countInter(dataset) {
     columns = Object.keys(dataset[0]);
     if (dataset.length > 1) {
@@ -1514,6 +1495,7 @@ function countInter(dataset) {
     }
     return dataset[0];
 }
+
 
 function countEmotion(dataset, dataChars) {
     columns = Object.keys(dataset[0]);
@@ -1536,6 +1518,7 @@ function countEmotion(dataset, dataChars) {
     dataset[0].Joey = dataset[0].Joey / dataset[0].JoeyCount;
     dataset[0].Chandler = dataset[0].Chandler / dataset[0].ChandlerCount;
     dataset[0].Phoebe = dataset[0].Phoebe / dataset[0].PhoebeCount;
+    dataset[0].totalCount = dataset[0].Rachel + dataset[0].Ross + dataset[0].Monica + dataset[0].Joey + dataset[0].Chandler + dataset[0].Phoebe;
 
     columns = ['Monica', 'Ross', 'Rachel', 'Joey', 'Chandler', 'Phoebe'];
     countTmp = 0;
@@ -1555,34 +1538,15 @@ function countEmotion(dataset, dataChars) {
         }
     }
 
-    const info = {totalCount:dataset[0].totalCount, char:chars, colour:color/*Monica:dataset[0].Monica, Ross:dataset[0].Ross, Rachel:dataset[0].Rachel, Joey:dataset[0].Joey, Chandler:dataset[0].Chandler, Phoebe:dataset[0].Phoebe*/};
+    Ra = Math.round(((dataset[0].Rachel * 100) / dataset[0].totalCount) * 100) / 100;
+    Ro = Math.round(((dataset[0].Ross * 100) / dataset[0].totalCount) * 100) / 100;
+    M = Math.round(((dataset[0].Monica * 100) / dataset[0].totalCount) * 100) / 100;
+    J = Math.round(((dataset[0].Joey * 100) / dataset[0].totalCount) * 100) / 100;
+    C = Math.round(((dataset[0].Chandler * 100) / dataset[0].totalCount) * 100) / 100;
+    P = Math.round(((dataset[0].Phoebe * 100) / dataset[0].totalCount) * 100) / 100;
+
+    const info = {totalCount:dataset[0].totalCount, char:chars, colour:color, percentages:{Monica:M, Ross:Ro, Rachel:Ra, Joey:J, Chandler:C, Phoebe:P}/*Monica:dataset[0].Monica, Ross:dataset[0].Ross, Rachel:dataset[0].Rachel, Joey:dataset[0].Joey, Chandler:dataset[0].Chandler, Phoebe:dataset[0].Phoebe*/};
 
     return info;
 }
 
-//for when we mouse houver something
-/*function handleMouseOver(event, d) {
-
-    barChart = d3.select("div#barChart").select("svg"); //loads barchart into a variable
-
-    barChart
-        .selectAll("rect")
-        .filter(function (b) {
-            if (d.character == b.character) { //d represents the data item associated with the element that triggered the event
-                return b;
-            }
-        })
-        .style("fill", "red");
-
-}
-
-
-
-function handleMouseLeave(event, d) { //will only change the red to steelblue
-    d3.select("div#barChart")
-        .select("svg")
-        .selectAll("rect")
-        .style("fill", function (d) {
-            return d.colour;
-        });
-}*/
