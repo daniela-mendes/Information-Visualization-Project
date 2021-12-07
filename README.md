@@ -1,4 +1,4 @@
-# Friends: The One with the InfoVis: VI 2021/2022
+# Friends: The One with the InfoVis (VI 2021/2022)
 
 **Group 41** 
 
